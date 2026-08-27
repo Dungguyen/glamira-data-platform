@@ -46,7 +46,11 @@ data/raw/*
 
 # MongoDB BSON dumps
 *.bson
+*.bson.gz
 
+# Database dumps
+*.dump
+*.backup
 
 # ============================================================
 # Generated / Processed Data
