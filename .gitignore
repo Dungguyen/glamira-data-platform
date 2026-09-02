@@ -130,3 +130,11 @@ Thumbs.db
 # ============================================================
 
 .vscode/
+
+# GeoIP reference databases
+*.mmdb
+
+# IP enrichment data artifacts
+unique_ips.txt
+ip_geolocation.csv
+geoip_summary.txt
