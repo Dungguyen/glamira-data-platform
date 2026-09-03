@@ -138,3 +138,8 @@ Thumbs.db
 unique_ips.txt
 ip_geolocation.csv
 geoip_summary.txt
+
+# Product extraction data artifacts
+product_set.csv
+product_url_set.csv
+product_extraction_summary.txt
