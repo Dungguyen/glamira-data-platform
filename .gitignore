@@ -148,3 +148,7 @@ product_extraction_summary.txt
 output/product_catalog_10000_results.csv
 output/product_catalog_10000_summary.txt
 EOF
+# Generated product crawl data
+data/crawl/
+
+# Generated product crawl data
