@@ -143,3 +143,8 @@ geoip_summary.txt
 product_set.csv
 product_url_set.csv
 product_extraction_summary.txt
+
+# Generated crawl outputs
+output/product_catalog_10000_results.csv
+output/product_catalog_10000_summary.txt
+EOF

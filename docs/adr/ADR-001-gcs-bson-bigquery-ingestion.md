@@ -59,7 +59,7 @@ GCS RAW BSON
 Cloud Function will be responsible for:
 
 - receiving the GCS finalized-object event
-- validating source metadata
+- validating source metadata    
 - starting the batch processing job
 
 Cloud Function will NOT parse the full 33.5 GB BSON file.
@@ -78,7 +78,7 @@ BigQuery RAW will contain one row per source event.
 
 ---
 
-## BigQuery RAW strategy
+## BigQuery RAW strategycan
 
 Initial candidate schema:
 
