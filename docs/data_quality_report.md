@@ -566,25 +566,18 @@ business cause of this relationship.
 
 ## 9. Encoding Screening
 
-A targeted screening was performed for common mojibake/corrupted text
-patterns.
+A targeted screening was performed for potential mojibake and text
+encoding inconsistencies.
 
-Results:
-
-```text
-Suspicious encoding matches: 0 / 50,000
-```
-
-Unicode values such as:
+Several suspicious representations were observed, including examples
+such as:
 
 ```text
-Weißgold
-€
-zł
-₺
-лв
-Kč
-```
+WeiÃŸgold
+â‚¬
+zÅ‚
+â‚º
+Ð»Ð²
 
 are valid multilingual text and should not be classified as encoding errors.
 
