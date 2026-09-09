@@ -70,3 +70,31 @@ rejected_documents
 Expected source count:
 
 41,432,473
+
+## Sample Load Validation
+
+### Checkpoint 18
+
+Status: PASS
+
+The 10,000-record JSONL.GZ sample was successfully loaded from
+Google Cloud Storage into BigQuery `raw.events`.
+
+Validation results:
+
+- Exported JSONL records: 10,000
+- BigQuery rows: 10,000
+- Row reconciliation: PASS
+- Event type querying: PASS
+- JSON payload querying: PASS
+
+Observed `option` JSON shapes:
+
+| JSON type | Rows |
+|---|---:|
+| array | 5,228 |
+| object | 2,714 |
+
+The result confirms that the stable-envelope + JSON-payload design
+preserves heterogeneous MongoDB structures without forcing a global
+schema on the Raw layer.
