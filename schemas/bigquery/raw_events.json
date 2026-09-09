@@ -1,0 +1,38 @@
+[
+  {
+    "name": "event_id",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "MongoDB document _id converted to string."
+  },
+  {
+    "name": "event_type",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Source event type from the MongoDB collection field."
+  },
+  {
+    "name": "event_timestamp_raw",
+    "type": "INT64",
+    "mode": "NULLABLE",
+    "description": "Original source time_stamp value in epoch seconds."
+  },
+  {
+    "name": "source_database",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Source MongoDB database."
+  },
+  {
+    "name": "source_collection",
+    "type": "STRING",
+    "mode": "REQUIRED",
+    "description": "Source MongoDB collection."
+  },
+  {
+    "name": "payload",
+    "type": "JSON",
+    "mode": "REQUIRED",
+    "description": "Complete BSON document represented as JSON-compatible Extended JSON."
+  }
+]
