@@ -34,5 +34,17 @@
     "type": "JSON",
     "mode": "REQUIRED",
     "description": "Complete BSON document represented as JSON-compatible Extended JSON."
-  }
+  },
+  {
+    "name": "ingestion_run_id",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "Identifier of the full ingestion run."
+    },
+  {
+    "name": "source_chunk",
+    "type": "STRING",
+    "mode": "NULLABLE",
+    "description": "GCS object path of the source JSONL chunk."
+    }
 ]
