@@ -572,7 +572,6 @@ encoding inconsistencies.
 Several suspicious representations were observed, including examples
 such as:
 
-```text
 WeiÃŸgold
 â‚¬
 zÅ‚
