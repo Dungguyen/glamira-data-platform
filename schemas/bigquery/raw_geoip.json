@@ -1,0 +1,57 @@
+[
+  {
+    "name": "ip",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  },
+  {
+    "name": "ip_version",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ip_country_code",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ip_country_name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ip_region_code",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ip_region_name",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "ip_city",
+    "type": "STRING",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "latitude",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "longitude",
+    "type": "FLOAT",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "accuracy_radius_km",
+    "type": "INTEGER",
+    "mode": "NULLABLE"
+  },
+  {
+    "name": "geo_status",
+    "type": "STRING",
+    "mode": "REQUIRED"
+  }
+]
