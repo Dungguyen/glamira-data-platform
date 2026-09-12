@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    database: glamira-pipeline-506706
+    schema: raw
+
+    tables:
+      - name: events
+      - name: products
+      - name: geoip

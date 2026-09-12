@@ -1,0 +1,60 @@
+version: 2
+
+models:
+  - name: stg_checkout_success
+    description: >
+      Parsed staging representation of raw checkout_success events.
+      This model preserves all checkout environments and does not
+      perform business-event deduplication.
+
+    columns:
+      - name: event_id
+        description: Source event identifier.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: event_timestamp
+        data_tests:
+          - not_null
+
+      - name: order_id
+        description: Source order identifier. Not globally unique.
+        data_tests:
+          - not_null
+
+      - name: store_id
+        data_tests:
+          - not_null
+
+      - name: cart_products
+        data_tests:
+          - not_null
+
+      - name: cart_product_count
+        data_tests:
+          - not_null
+
+      - name: checkout_environment
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - PRODUCTION
+                  - STAGE
+                  - DEV
+                  - LOCAL
+                  - UNKNOWN
+
+      - name: device_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - MOBILE
+                  - DESKTOP
+                  - TABLET
+                  - BOT
+                  - UNKNOWN
