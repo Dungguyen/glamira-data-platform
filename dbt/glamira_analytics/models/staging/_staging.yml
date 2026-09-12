@@ -58,3 +58,27 @@ models:
                   - TABLET
                   - BOT
                   - UNKNOWN
+
+  - name: stg_products
+    description: >
+      Normalized staging model containing successfully enriched
+      product reference records.
+
+    columns:
+      - name: product_id
+        description: Natural product identifier from the source.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: product_master_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - ENRICHED
+
+      - name: is_enriched
+        data_tests:
+          - not_null
