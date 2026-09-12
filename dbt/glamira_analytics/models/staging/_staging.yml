@@ -82,3 +82,43 @@ models:
       - name: is_enriched
         data_tests:
           - not_null
+
+  - name: stg_geoip
+    description: >
+      Normalized IP geolocation reference data used to resolve
+      checkout IP addresses into geographic attributes.
+
+    columns:
+      - name: ip_address
+        description: Natural IP lookup key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: ip_version
+        data_tests:
+          - accepted_values:
+              arguments:
+                values:
+                  - 4
+                  - 6
+                quote: false
+
+      - name: geo_status
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - FOUND
+                  - ADDRESS_NOT_FOUND
+                  - NON_GLOBAL
+                  - INVALID
+
+      - name: latitude
+        description: Geographic latitude when available.
+
+        description: Geographic longitude when available.
+
+      - name: geo_status
+        description: Source GeoIP lookup status.
