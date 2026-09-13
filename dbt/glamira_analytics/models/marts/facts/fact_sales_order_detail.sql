@@ -68,7 +68,11 @@ LEFT JOIN {{ ref('dim_date') }} AS date_dim
     ON DATE(lines.event_timestamp) = date_dim.full_date
 
 LEFT JOIN {{ ref('dim_customer') }} AS customer
-    ON lines.customer_id = customer.customer_id
+    ON TO_HEX(
+        SHA256(
+            CAST(lines.customer_id AS BYTES)
+        )
+    ) = customer.customer_id_hash
 
 LEFT JOIN {{ ref('dim_product') }} AS product
     ON lines.product_id = product.product_id

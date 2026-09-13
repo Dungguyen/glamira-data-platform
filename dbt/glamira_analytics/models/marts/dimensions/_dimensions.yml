@@ -13,8 +13,8 @@ models:
           - not_null
           - unique
 
-      - name: customer_id
-        description: Natural customer identifier from user_id_db.
+      - name: customer_id_hash
+        description: SHA-256 pseudonym of the source customer identifier.
         data_tests:
           - unique
 

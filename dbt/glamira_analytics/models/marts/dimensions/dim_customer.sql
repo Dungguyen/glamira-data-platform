@@ -17,7 +17,7 @@ WITH known_customers AS (
 
     SELECT
         CAST(0 AS INT64) AS customer_key
-        ,CAST(NULL AS STRING) AS customer_id
+        ,CAST(NULL AS STRING) AS customer_id_hash
         ,'UNKNOWN' AS customer_type
         ,FALSE AS is_registered
 
@@ -33,7 +33,12 @@ WITH known_customers AS (
             )
         ) AS customer_key
 
-        ,customer_id
+        ,TO_HEX(
+            SHA256(
+                CAST(customer_id AS BYTES)
+            )
+        ) AS customer_id_hash
+
         ,'REGISTERED' AS customer_type
         ,TRUE AS is_registered
 
