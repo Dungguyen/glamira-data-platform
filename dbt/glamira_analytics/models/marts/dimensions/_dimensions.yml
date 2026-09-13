@@ -128,3 +128,44 @@ models:
         description: Indicates the Unknown Device dimension member.
         data_tests:
           - not_null
+
+  - name: dim_date
+    description: >
+      Calendar date dimension covering the complete production checkout
+      date range plus one Unknown Date member.
+
+    columns:
+      - name: date_key
+        description: Calendar smart key in YYYYMMDD format, with 0 reserved for Unknown Date.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: full_date
+        description: Calendar date.
+        data_tests:
+          - unique
+
+      - name: day_name
+        data_tests:
+          - not_null
+
+      - name: month_name
+        data_tests:
+          - not_null
+
+      - name: year_month
+        data_tests:
+          - not_null
+
+      - name: quarter_name
+        data_tests:
+          - not_null
+
+      - name: is_weekend
+        data_tests:
+          - not_null
+
+      - name: is_unknown
+        data_tests:
+          - not_null
