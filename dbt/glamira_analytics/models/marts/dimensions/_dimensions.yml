@@ -86,3 +86,45 @@ models:
       - name: is_unknown
         data_tests:
           - not_null
+
+
+  - name: dim_device
+    description: >
+      Analytical device dimension containing one row per
+      device type and screen resolution combination, plus
+      one Unknown Device member.
+
+    columns:
+      - name: device_key
+        description: Deterministic surrogate device key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: device_type
+        description: Analytical device classification.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - MOBILE
+                  - DESKTOP
+                  - TABLET
+                  - BOT
+                  - UNKNOWN
+
+      - name: resolution_name
+        description: Normalized screen resolution in width x height format.
+        data_tests:
+          - not_null
+
+      - name: is_bot
+        description: Indicates whether the device was classified as a bot.
+        data_tests:
+          - not_null
+
+      - name: is_unknown
+        description: Indicates the Unknown Device dimension member.
+        data_tests:
+          - not_null
