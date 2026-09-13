@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: int_checkout_deduplicated
+    description: >
+      Deduplicated successful checkout business instances.
+      Duplicate tracking events are collapsed using order_id,
+      store_id and cart_hash, with production events preferred
+      over non-production tracking contexts.
+
+    columns:
+      - name: event_id
+        data_tests:
+          - not_null
+          - unique
+
+      - name: order_id
+        data_tests:
+          - not_null
+
+      - name: store_id
+        data_tests:
+          - not_null
+
+      - name: cart_hash
+        data_tests:
+          - not_null
+
+      - name: cart_products
+        data_tests:
+          - not_null
+
+      - name: checkout_environment
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - PRODUCTION
+                  - STAGE
+                  - DEV
+                  - LOCAL
