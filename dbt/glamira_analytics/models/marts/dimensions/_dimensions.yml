@@ -169,3 +169,37 @@ models:
       - name: is_unknown
         data_tests:
           - not_null
+
+  - name: dim_geo
+    description: >
+      Analytical geography dimension containing distinct observed
+      production country, region and city combinations plus one
+      Unknown Geography member.
+
+    columns:
+      - name: geo_key
+        description: Deterministic surrogate geography key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: country_name
+        description: Country name or Unknown for the unknown member.
+        data_tests:
+          - not_null
+
+      - name: geo_level
+        description: Most detailed geographical level available.
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - CITY
+                  - REGION
+                  - COUNTRY
+                  - UNKNOWN
+
+      - name: is_unknown
+        data_tests:
+          - not_null
