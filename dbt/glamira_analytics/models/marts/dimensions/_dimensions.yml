@@ -1,0 +1,32 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: >
+      Customer dimension containing registered customers observed
+      in successful checkout events plus one Unknown Customer member.
+
+    columns:
+      - name: customer_key
+        description: Deterministic surrogate customer key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: customer_id
+        description: Natural customer identifier from user_id_db.
+        data_tests:
+          - unique
+
+      - name: customer_type
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values:
+                  - REGISTERED
+                  - UNKNOWN
+
+      - name: is_registered
+        data_tests:
+          - not_null

@@ -118,7 +118,10 @@ models:
       - name: latitude
         description: Geographic latitude when available.
 
+      - name: longitude
         description: Geographic longitude when available.
 
       - name: geo_status
-        description: Source GeoIP lookup status.
+        description: >
+          Source GeoIP lookup status indicating whether the lookup
+          was successful or why geolocation was unavailable.
