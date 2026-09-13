@@ -1,0 +1,90 @@
+version: 2
+
+models:
+  - name: fact_sales_order_detail
+    description: >
+      Production sales fact table at one row per product line within
+      one deduplicated successful checkout instance.
+
+    columns:
+      - name: sales_order_detail_key
+        description: Deterministic fact row key inherited from the normalized core sales line.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: checkout_instance_key
+        data_tests:
+          - not_null
+
+      - name: order_id
+        data_tests:
+          - not_null
+
+      - name: line_number
+        data_tests:
+          - not_null
+
+      - name: date_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+
+      - name: customer_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+
+      - name: product_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+
+      - name: geo_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_geo')
+                field: geo_key
+
+      - name: store_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_store')
+                field: store_key
+
+      - name: device_key
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_device')
+                field: device_key
+
+      - name: product_id
+        data_tests:
+          - not_null
+
+      - name: quantity
+        data_tests:
+          - not_null
+
+      - name: event_timestamp
+        data_tests:
+          - not_null
+
+      - name: source_event_id
+        data_tests:
+          - not_null
