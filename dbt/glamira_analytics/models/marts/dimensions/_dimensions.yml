@@ -30,3 +30,32 @@ models:
       - name: is_registered
         data_tests:
           - not_null
+
+  - name: dim_product
+    description: >
+      Product dimension containing enriched Glamira products
+      plus one Unknown Product member for unmatched fact rows.
+
+    columns:
+      - name: product_key
+        description: Deterministic surrogate product key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: product_id
+        description: Natural product identifier from the source.
+        data_tests:
+          - unique
+
+      - name: product_name
+        data_tests:
+          - not_null
+
+      - name: category_name
+        data_tests:
+          - not_null
+
+      - name: is_unknown
+        data_tests:
+          - not_null
