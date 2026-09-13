@@ -59,3 +59,30 @@ models:
       - name: is_unknown
         data_tests:
           - not_null
+
+  - name: dim_store
+    description: >
+      Store dimension containing one row per source store_id,
+      using the canonical production host as store_domain,
+      plus one Unknown Store member.
+
+    columns:
+      - name: store_key
+        description: Deterministic surrogate store key.
+        data_tests:
+          - not_null
+          - unique
+
+      - name: store_id
+        description: Natural store identifier from checkout events.
+        data_tests:
+          - unique
+
+      - name: store_domain
+        description: Canonical production domain associated with the store.
+        data_tests:
+          - not_null
+
+      - name: is_unknown
+        data_tests:
+          - not_null
