@@ -14,18 +14,27 @@ models:
           - unique
 
       - name: checkout_instance_key
+        description: >
+          Deterministic identifier of the deduplicated successful checkout
+          instance from which this sales order line was produced.
         data_tests:
           - not_null
 
       - name: order_id
+        description: >
+          Business order identifier captured from the successful checkout event.
         data_tests:
           - not_null
 
       - name: line_number
+        description: >
+          Position of the product line within the checkout cart.
         data_tests:
           - not_null
 
       - name: date_key
+        description: >
+          Foreign key to dim_date representing the date of the checkout event.
         data_tests:
           - not_null
           - relationships:
@@ -34,6 +43,9 @@ models:
                 field: date_key
 
       - name: customer_key
+        description: >
+          Foreign key to dim_customer. Unresolved or anonymous customers
+          are mapped to the Unknown Customer member.
         data_tests:
           - not_null
           - relationships:
@@ -42,6 +54,9 @@ models:
                 field: customer_key
 
       - name: product_key
+        description: >
+          Foreign key to dim_product. Products not found in the product
+          master are mapped to the Unknown Product member.
         data_tests:
           - not_null
           - relationships:
@@ -50,6 +65,9 @@ models:
                 field: product_key
 
       - name: geo_key
+        description: >
+          Foreign key to dim_geo representing the geography resolved
+          from the checkout IP address.
         data_tests:
           - not_null
           - relationships:
@@ -58,6 +76,9 @@ models:
                 field: geo_key
 
       - name: store_key
+        description: >
+          Foreign key to dim_store representing the storefront associated
+          with the checkout.
         data_tests:
           - not_null
           - relationships:
@@ -66,6 +87,9 @@ models:
                 field: store_key
 
       - name: device_key
+        description: >
+          Foreign key to dim_device representing the normalized device
+          type and screen resolution combination.
         data_tests:
           - not_null
           - relationships:
@@ -74,17 +98,28 @@ models:
                 field: device_key
 
       - name: product_id
+        description: >
+          Source-system product identifier captured from the checkout event.
+          It is retained for business traceability even when the product
+          dimension cannot be resolved.
         data_tests:
           - not_null
 
       - name: quantity
+        description: >
+          Quantity of the product represented by this sales order line.
         data_tests:
           - not_null
 
       - name: event_timestamp
+        description: >
+          Timestamp at which the successful checkout event occurred.
         data_tests:
           - not_null
 
       - name: source_event_id
+        description: >
+          Identifier of the source checkout event retained for lineage
+          and traceability.
         data_tests:
           - not_null

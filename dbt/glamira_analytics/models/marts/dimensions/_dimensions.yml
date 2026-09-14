@@ -19,6 +19,9 @@ models:
           - unique
 
       - name: customer_type
+        description: >
+          Classification of the customer record, such as REGISTERED
+          or UNKNOWN.
         data_tests:
           - not_null
           - accepted_values:
@@ -28,6 +31,9 @@ models:
                   - UNKNOWN
 
       - name: is_registered
+        description: >
+          Boolean flag indicating whether the dimension row represents
+          a registered customer.
         data_tests:
           - not_null
 
@@ -49,14 +55,19 @@ models:
           - unique
 
       - name: product_name
+        description: Product name supplied by the product master dataset.
         data_tests:
           - not_null
 
       - name: category_name
+        description: Product category associated with the product master record.
         data_tests:
           - not_null
 
       - name: is_unknown
+        description: >
+          Boolean flag identifying the Unknown Product member used when
+          a checkout product cannot be matched to the product master.
         data_tests:
           - not_null
 
@@ -84,6 +95,9 @@ models:
           - not_null
 
       - name: is_unknown
+        description: >
+          Boolean flag identifying the Unknown Store member used for
+          unresolved store references.
         data_tests:
           - not_null
 
@@ -147,26 +161,36 @@ models:
           - unique
 
       - name: day_name
+        description: Full English name of the calendar day of week.
         data_tests:
           - not_null
 
       - name: month_name
+        description: Full English name of the calendar month.
         data_tests:
           - not_null
 
       - name: year_month
+        description: Calendar year and month represented in YYYY-MM format.
         data_tests:
           - not_null
 
       - name: quarter_name
+        description: Calendar quarter label such as Q1, Q2, Q3 or Q4.
         data_tests:
           - not_null
 
       - name: is_weekend
+        description: >
+          Boolean flag indicating whether the calendar date falls on
+          Saturday or Sunday.
         data_tests:
           - not_null
 
       - name: is_unknown
+        description: >
+          Boolean flag identifying the Unknown Date member used for
+          unresolved dimension references.
         data_tests:
           - not_null
 
@@ -201,5 +225,8 @@ models:
                   - UNKNOWN
 
       - name: is_unknown
+        description: >
+          Boolean flag identifying the Unknown Geography member used
+          when geographic information cannot be resolved.
         data_tests:
           - not_null
