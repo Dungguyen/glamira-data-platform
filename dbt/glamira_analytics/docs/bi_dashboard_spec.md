@@ -201,3 +201,40 @@ logic.
 
 Until such a model exists, the dashboard reports local sales amount only
 within a Store + Currency context.
+
+### Sales Amount Local
+
+Sum of `line_amount_local` within a consistent Store + Currency context.
+
+Formula:
+
+`SUM(line_amount_local)`
+
+Required grouping or filter context:
+
+- Store
+- Currency
+
+This metric must not be aggregated across different currencies.
+
+## Quantity Anomaly Policy
+
+The source dataset contains legitimate-looking checkout records with unusually
+high product quantities.
+
+A notable example occurs on 2020-04-09, where one sales line contains a
+quantity of 9,999. This single row increases daily units from 504 to 10,503
+and also materially affects the associated local sales amount.
+
+These records are retained because there is currently no authoritative
+business rule proving that quantities above 10 are invalid.
+
+The dashboard must therefore:
+
+- preserve Raw Units as the source-faithful metric;
+- expose High Quantity Lines as a data-quality indicator;
+- avoid silently excluding high-quantity records;
+- avoid presenting an adjusted Units or Sales metric as authoritative unless
+  a documented business rule is introduced.
+
+High Quantity is currently defined for monitoring as `quantity > 10`.
