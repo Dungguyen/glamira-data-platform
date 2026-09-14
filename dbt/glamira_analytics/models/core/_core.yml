@@ -10,55 +10,92 @@ models:
 
     columns:
       - name: event_id
+        description: >
+          Unique identifier of the source checkout event selected to
+          represent the deduplicated checkout instance.
         data_tests:
           - not_null
           - unique
 
       - name: customer_id
+        description: >
+          Source-system customer identifier associated with the checkout.
+          This field is protected as a customer identifier.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/6348636645518110315
 
       - name: email_address
+        description: >
+          Customer email address captured by the checkout event.
+          This field contains direct PII and is protected by a policy tag.
+
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/4890490406766586098
 
       - name: ip_address
+        description: >
+          IP address observed for the checkout event and used for
+          geographic enrichment. This field is protected as network PII.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/5361116927825558873
 
       - name: device_id
+        description: >
+          Persistent device identifier associated with the checkout event.
+          This field is protected as a device identifier.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/3344699932647334883
 
       - name: user_agent
+        description: >
+          Browser or client user-agent string captured by the checkout event.
+          It is treated as a quasi-identifier.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/8757751909258418220
 
       - name: current_url
+        description: >
+          Page URL on which the checkout event was recorded.
+          It may contain sensitive browsing context.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
 
       - name: referrer_url
+        description: >
+          Referring URL associated with the checkout event.
+          It may contain sensitive browsing context.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
 
       - name: order_id
+        description: >
+          Business order identifier associated with the successful checkout.
         data_tests:
           - not_null
 
       - name: store_id
+        description: >
+          Source-system store identifier associated with the checkout.
         data_tests:
           - not_null
 
       - name: cart_hash
+        description: >
+          Deterministic hash representing the checkout cart and used together
+          with order_id and store_id to identify duplicate checkout events.
         data_tests:
           - not_null
 
       - name: cart_products
+        description: >
+          Nested collection of products contained in the successful checkout cart.
         data_tests:
           - not_null
 
       - name: checkout_environment
+        description: >
+          Normalized tracking environment of the checkout event, such as
+          PRODUCTION, STAGE, DEV or LOCAL.
         data_tests:
           - not_null
           - accepted_values:
@@ -77,67 +114,107 @@ models:
 
     columns:
       - name: sales_order_line_key
+        description: >
+          Deterministic unique identifier for a product line within a
+          deduplicated checkout instance.
         data_tests:
           - not_null
           - unique
 
       - name: checkout_instance_key
+        description: >
+          Deterministic identifier linking the product line to its
+          deduplicated successful checkout instance.
         data_tests:
           - not_null
 
       - name: source_event_id
+        description: >
+          Identifier of the source checkout event retained for lineage
+          and traceability.
         data_tests:
           - not_null
 
       - name: order_id
+        description: >
+          Business order identifier inherited from the successful checkout.
         data_tests:
           - not_null
 
       - name: store_id
+        description: >
+          Source-system store identifier associated with the checkout.
+
         data_tests:
           - not_null
 
       - name: line_number
+        description: >
+          Ordinal position of the product within the checkout cart.
         data_tests:
           - not_null
 
       - name: product_id
+        description: >
+          Source-system identifier of the product represented by the line.
         data_tests:
           - not_null
 
       - name: customer_id
+        description: >
+          Source-system customer identifier associated with the checkout.
+          This field is protected as a customer identifier.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/6348636645518110315
 
       - name: email_address
+        description: >
+          Customer email address inherited from the checkout event.
+          This field contains direct PII.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/4890490406766586098
 
       - name: ip_address
+        description: >
+          IP address inherited from the checkout event and used for
+          geographic enrichment.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/5361116927825558873
 
       - name: device_id
+        description: >
+          Persistent device identifier inherited from the checkout event.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/3344699932647334883
 
       - name: user_agent
+        description: >
+          Browser or client user-agent string inherited from the checkout event.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/8757751909258418220
 
       - name: current_url
+        description: >
+          Page URL associated with the source checkout event.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
 
       - name: referrer_url
+        description: >
+          Referring URL associated with the source checkout event.
         policy_tags:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
 
       - name: quantity
+        description: >
+          Quantity of the product represented by the sales order line.
         data_tests:
           - not_null
 
       - name: price_format
+        description: >
+          Classification describing the detected source price representation
+          used during price normalization.
         data_tests:
           - not_null
           - accepted_values:
@@ -155,6 +232,9 @@ models:
                   - UNSUPPORTED
 
       - name: option_type
+        description: >
+          Detected structural type of the source product option field,
+          such as array or string.
         data_tests:
           - accepted_values:
               arguments:
@@ -163,6 +243,8 @@ models:
                   - string
 
       - name: checkout_environment
+        description: >
+          Normalized tracking environment inherited from the checkout event.
         data_tests:
           - not_null
           - accepted_values:

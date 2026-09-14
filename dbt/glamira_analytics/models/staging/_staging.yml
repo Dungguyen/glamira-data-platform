@@ -15,6 +15,8 @@ models:
           - unique
 
       - name: event_timestamp
+        description: >
+          Timestamp at which the successful checkout event was recorded.
         data_tests:
           - not_null
 
@@ -29,6 +31,8 @@ models:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/6348636645518110315
 
       - name: store_id
+        description: >
+          Source-system identifier of the storefront associated with the event.
         data_tests:
           - not_null
 
@@ -63,14 +67,22 @@ models:
           - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/8757751909258418220
 
       - name: cart_products
+        description: >
+          Nested source collection containing products included in the
+          successful checkout cart.
         data_tests:
           - not_null
 
       - name: cart_product_count
+        description: >
+          Number of product entries contained in the checkout cart.
         data_tests:
           - not_null
 
       - name: checkout_environment
+        description: >
+          Normalized environment in which the checkout event was recorded,
+          such as PRODUCTION, STAGE, DEV or LOCAL.
         data_tests:
           - not_null
           - accepted_values:
@@ -83,6 +95,9 @@ models:
                   - UNKNOWN
 
       - name: device_type
+        description: >
+          Normalized device classification derived from the source
+          user-agent and event attributes.
         data_tests:
           - not_null
           - accepted_values:
@@ -107,6 +122,9 @@ models:
           - unique
 
       - name: product_master_status
+        description: >
+          Classification describing the product's enrichment or master-data
+          resolution status.
         data_tests:
           - not_null
           - accepted_values:
@@ -115,6 +133,9 @@ models:
                   - ENRICHED
 
       - name: is_enriched
+        description: >
+          Boolean flag indicating whether the product record contains
+          successfully enriched product-master information.
         data_tests:
           - not_null
 
@@ -133,6 +154,8 @@ models:
           - unique
 
       - name: ip_version
+        description: >
+          Internet Protocol version of the staged IP address, such as IPv4 or IPv6.
         data_tests:
           - accepted_values:
               arguments:
