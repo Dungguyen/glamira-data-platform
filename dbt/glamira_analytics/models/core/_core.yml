@@ -14,6 +14,34 @@ models:
           - not_null
           - unique
 
+      - name: customer_id
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/6348636645518110315
+
+      - name: email_address
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/4890490406766586098
+
+      - name: ip_address
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/5361116927825558873
+
+      - name: device_id
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/3344699932647334883
+
+      - name: user_agent
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/8757751909258418220
+
+      - name: current_url
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
+
+      - name: referrer_url
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
+
       - name: order_id
         data_tests:
           - not_null
@@ -76,6 +104,34 @@ models:
       - name: product_id
         data_tests:
           - not_null
+
+      - name: customer_id
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/6348636645518110315
+
+      - name: email_address
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/4890490406766586098
+
+      - name: ip_address
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/5361116927825558873
+
+      - name: device_id
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/3344699932647334883
+
+      - name: user_agent
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/8757751909258418220
+
+      - name: current_url
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
+
+      - name: referrer_url
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
 
       - name: quantity
         data_tests:

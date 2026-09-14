@@ -23,9 +23,44 @@ models:
         data_tests:
           - not_null
 
+      - name: customer_id
+        description: Persistent customer identifier from the source.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/6348636645518110315
+
       - name: store_id
         data_tests:
           - not_null
+
+      - name: email_address
+        description: Customer email address from the source event.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/4890490406766586098
+
+      - name: ip_address
+        description: Source IP address associated with the checkout event.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/5361116927825558873
+
+      - name: current_url
+        description: URL being visited when the checkout event was recorded.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
+
+      - name: referrer_url
+        description: Referrer URL associated with the checkout event.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/1485717519343638640
+
+      - name: device_id
+        description: Persistent source device identifier.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/3344699932647334883
+
+      - name: user_agent
+        description: Full source user-agent string.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/8757751909258418220
 
       - name: cart_products
         data_tests:
@@ -91,6 +126,8 @@ models:
     columns:
       - name: ip_address
         description: Natural IP lookup key.
+        policy_tags:
+          - projects/glamira-pipeline-506706/locations/asia-southeast1/taxonomies/3019220019474089968/policyTags/5361116927825558873
         data_tests:
           - not_null
           - unique
@@ -105,6 +142,9 @@ models:
                 quote: false
 
       - name: geo_status
+        description: >
+          Source GeoIP lookup status indicating whether the lookup
+          was successful or why geolocation was unavailable.
         data_tests:
           - not_null
           - accepted_values:
@@ -120,8 +160,3 @@ models:
 
       - name: longitude
         description: Geographic longitude when available.
-
-      - name: geo_status
-        description: >
-          Source GeoIP lookup status indicating whether the lookup
-          was successful or why geolocation was unavailable.
