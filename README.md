@@ -1,351 +1,1224 @@
 # Glamira Data Platform
 
-A Data Engineering project for exploring, validating, enriching, and
-preparing Glamira behavioral event data for downstream analytics.
+An end-to-end Data Engineering portfolio project that transforms raw Glamira checkout/event data into a governed BigQuery dimensional model and a business-facing Looker Studio dashboard.
 
-The project follows an evidence-first workflow:
+The project covers:
 
-> Understand the data → validate assumptions → enrich required
-> dimensions → document decisions → build analytical pipelines.
+**raw data discovery → ingestion → profiling → dbt transformation → dimensional modeling → data quality → PII protection → BI serving layer → Looker Studio**
+
+> This README is designed so another engineer can understand the system, validate it, and reproduce the analytics workflow in their own Google Cloud environment.
 
 ---
 
-## 1. Business Context
+## 1. Project Goals
 
-The raw Glamira dataset contains behavioral/e-commerce events but does
-not directly provide all business-friendly analytical attributes.
+The project answers four engineering questions:
 
-Example requirements include:
+1. How can large semi-structured Glamira event data be ingested and profiled safely?
+2. How should successful checkout events be deduplicated and transformed into an analytics-ready grain?
+3. How can customer, product, store, device, geography, and date dimensions be modeled without dropping unresolved source records?
+4. How can the resulting mart be exposed to BI while protecting PII and preserving trustworthy KPI definitions?
 
-- geographic performance;
-- revenue by country/city;
-- product performance;
-- product category analysis;
-- time-based behavioral analysis.
+Primary analytical fact:
 
-Two important enrichment gaps were identified:
+`fact_sales_order_detail`
 
-raw IP
-   ↓
-GeoIP enrichment
-   ↓
-country / region / city
+Grain:
 
-and:
+> **One product line within one deduplicated successful checkout.**
 
-product_id
-   ↓
-product metadata enrichment
-   ↓
-product_name / sku / category / description
+Final BI-facing object:
 
-## 2. Source Dataset
+`bi_sales_order_detail`
 
-The source dataset is a BSON file containing Glamira event data.
+---
 
-Validated source statistics:
+## 2. Architecture
 
-Metric	Value
-BSON documents	41,432,473
-MongoDB documents	41,432,473
-Source/MongoDB difference	0
-Source size	~31.2 GiB
-MongoDB database	glamira
-MongoDB collection	summary
+```text
+Raw BSON / source datasets
+        |
+        v
+Google Cloud Storage
+        |
+        v
+BigQuery raw datasets
+        |
+        v
+dbt Staging Layer
+dbt_dev_staging
+        |
+        v
+dbt Core Layer
+dbt_dev_core
+        |
+        v
+Dimensional Mart
+dbt_dev_mart
+        |
+        +--> dim_customer
+        +--> dim_product
+        +--> dim_store
+        +--> dim_device
+        +--> dim_date
+        +--> dim_geo
+        +--> fact_sales_order_detail
+        |
+        v
+bi_sales_order_detail
+        |
+        v
+Looker Studio
+```
 
-The source and MongoDB counts reconcile exactly.
+The BI layer reads only the controlled mart/BI-serving layer. It does not query raw, staging, or core datasets directly.
 
-## 3. Data Characteristics
+---
 
-The source follows a flexible event-oriented schema.
+## 3. Technology Stack
 
-Different values of collection represent different event types and
-therefore contain different attributes.
+| Area | Technology |
+|---|---|
+| Development OS | Windows |
+| Shell | PowerShell |
+| Editor | Visual Studio Code |
+| Python environment | `uv` |
+| Python | 3.12.13 |
+| Local BSON exploration | MongoDB 8 |
+| MongoDB tools | Database Tools 100.18.0 |
+| Cloud | Google Cloud Platform |
+| Storage | Google Cloud Storage |
+| Warehouse | BigQuery |
+| Transformation | dbt Core 1.12.4 |
+| BigQuery adapter | dbt-bigquery 1.12.0 |
+| BI | Looker Studio |
+| Version control | Git / GitHub |
 
-Examples include:
+---
 
-view_product_detail
-view_listing_page
-select_product_option
-select_product_option_quality
-add_to_cart_action
-view_shopping_cart
-checkout
-checkout_success
-recommendation-related events
+## 4. Repository Layout
 
-Important characteristics discovered during profiling:
+Simplified structure:
 
-fields are event-dependent;
-missing values are often semantic rather than data loss;
-option can appear as object or array;
-some fields have mixed BSON types;
-products can appear at top level or inside nested cart/recommendation
-structures;
-price and currency values can use localized representations.
+```text
+glamira-data-platform/
+|
+|-- data/
+|   `-- raw/
+|       `-- summary.bson              # local only, ignored by Git
+|
+|-- dbt/
+|   `-- glamira_analytics/
+|       |-- models/
+|       |   |-- staging/
+|       |   |-- core/
+|       |   `-- marts/
+|       |       |-- dimensions/
+|       |       |-- facts/
+|       |       `-- bi/
+|       |-- tests/
+|       |   |-- mart/
+|       |   `-- quality/
+|       |-- docs/
+|       |   |-- data_quality.md
+|       |   |-- dbt_quality_report.md
+|       |   |-- bi_dashboard_spec.md
+|       |   |-- bi_dashboard_handoff.md
+|       |   `-- images/
+|       |       `-- bi/
+|       |-- scripts/
+|       |   `-- Invoke-BqRest.ps1
+|       |-- dbt_project.yml
+|       `-- ...
+|
+|-- docs/                            # platform / ingestion / discovery docs
+|-- pyproject.toml
+|-- uv.lock
+|-- .python-version
+|-- .gitignore
+`-- README.md
+```
 
-See:
+---
 
-docs/data_quality_report.md
-docs/data_dictionary.md
+## 5. Data Sources
 
-for detailed findings.
+### Event BSON
 
-## 4. Architecture — Current Scope
-                         GCS
-                  summary.bson
-                       │
-                       ▼
-                  MongoDB VM
-             glamira.summary
-             41,432,473 docs
-                       │
-          ┌────────────┴────────────┐
-          │                         │
-          ▼                         ▼
-     IP Extraction            Product Discovery
-          │                         │
-          ▼                         ▼
-   GeoLite2 City              Product Enrichment
-          │                         │
-          ▼                         ▼
-  ip_geolocation              dim_product
-     ~3.24M IPs              19,558 products
-          │                         │
-          └────────────┬────────────┘
-                       ▼
-                Analytics-ready
-                 enrichment data
-## 5. Data Exploration
+Original object:
 
-A bounded MongoDB exploration script is available at:
+```text
+gs://glamira-raw-data-506706/summary.bson
+```
 
-src/glamira_data/discovery/data_exploration.py
+Original reported size:
+
+```text
+~33.5 GB
+```
+
+Local development path:
+
+```text
+D:\glamira-data-platform\data\raw\summary.bson
+```
+
+The BSON file is intentionally ignored by Git.
+
+### Product master
+
+```text
+18,648 product rows
+```
+
+### GeoIP
+
+```text
+3,239,628 GeoIP rows
+```
+
+The project used MaxMind GeoLite2 for IP geolocation enrichment.
+
+### Reproducibility note
+
+The raw Glamira data is not bundled in this repository.
+
+To reproduce the project exactly, you need access to the same source datasets. If you use equivalent data instead, adapt the source definitions while preserving the documented grains and contracts.
+
+---
+
+## 6. Important Validation Baselines
+
+These numbers are useful when reproducing the original dataset.
+
+### Raw / checkout processing
+
+```text
+Raw event rows                         41,432,473
+Raw checkout_success events               26,079
+Deduplicated checkout instances            26,045
+Production checkout instances              25,962
+```
+
+### Final fact
+
+```text
+fact_sales_order_detail rows                34,916
+Distinct fact keys                          34,916
+Successful production checkouts             25,962
+Raw units                                   45,573
+Distinct source products                     5,826
+```
+
+### Known dimensional gaps
+
+```text
+Unknown customer lines                      11,681
+Unknown product lines                        6,805
+Unknown product IDs                            198
+Unknown geography lines                         17
+Unknown date lines                                0
+Unknown store lines                               0
+Unknown device lines                              0
+```
+
+---
+
+## 7. Prerequisites
+
+Install:
+
+- Git
+- Visual Studio Code
+- Python 3.12
+- `uv`
+- Google Cloud CLI
+- dbt Core + dbt-bigquery
+- access to a Google Cloud project with BigQuery enabled
+- optional: MongoDB + MongoDB Database Tools for local BSON inspection
+- optional: Looker Studio access
+
+Authenticate:
+
+```powershell
+gcloud auth login
+gcloud auth application-default login
+gcloud auth list
+```
+
+---
+
+## 8. Clone and Prepare
+
+```powershell
+git clone <YOUR_REPOSITORY_URL>
+cd glamira-data-platform
+```
+
+Prepare Python:
+
+```powershell
+uv sync
+```
+
+Install dbt if needed:
+
+```powershell
+uv tool install --python 3.12 "dbt-core==1.12.4" --with "dbt-bigquery==1.12.0"
+```
+
+Validate:
+
+```powershell
+dbt --version
+```
+
+---
+
+## 9. Optional Local BSON Exploration
+
+Useful tools:
+
+```powershell
+bsondump.exe --version
+mongorestore.exe --version
+```
 
 Example:
 
-python data_exploration.py --sample-size 100000
+```powershell
+bsondump.exe --pretty D:\glamira-data-platform\data\raw\summary.bson
+```
 
-Latest 100K exploration run:
+Observed source fields include:
 
-Metric	Result
-Documents inspected	100,000
-Event types observed	22
-Unique IPs in sample	13,761
+```text
+_id
+time_stamp
+ip
+user_agent
+resolution
+user_id_db
+device_id
+api_version
+store_id
+local_time
+current_url
+referrer_url
+email_address
+collection
+product_id
+collect_id
+cat_id
+option
+```
 
-The bounded sample is used for exploration only and should not be
-interpreted as the statistical distribution of the complete dataset.
+The `option` field can appear as an object or an array of objects, so the project favors schema-on-read instead of forcing a rigid schema at ingestion time.
 
-## 6. IP Geolocation Enrichment
+---
 
-IP enrichment uses the GeoLite2 City database.
+## 10. Google Cloud Setup
 
-Implementation:
+The original deployment used:
 
-src/glamira_data/enrichment/ip_geo/
-├── enrich_ips.py
-├── validate_ips.py
-└── benchmark_geoip.py
+```text
+Project ID: glamira-pipeline-506706
+Region:     asia-southeast1
+```
 
-Validated results:
+For reproduction, use your own values:
 
-Metric	Value
-Unique source IP values	3,239,628
-Valid IPs	3,239,627
-Invalid source values	1
-Eligible public IPs	3,239,321
-Successful lookups	3,238,973
-Country coverage	99.99%
-Region coverage	88.89%
-City coverage	85.39%
+```text
+<YOUR_GCP_PROJECT_ID>
+<YOUR_BUCKET_NAME>
+<YOUR_REGION>
+```
 
-GeoIP locations are approximate and should not be treated as exact
-physical user locations.
+Do not copy project-specific policy-tag resource IDs into another GCP project.
 
-Detailed report:
+---
 
-docs/ip_geolocation_report.md
-## 7. Product Discovery and Enrichment
+## 11. dbt Setup
 
-The complete discovered product universe contains:
+Run dbt from:
 
-19,558 unique product IDs
+```powershell
+cd D:\glamira-data-platform\dbt\glamira_analytics
+```
 
-Product IDs were discovered across:
+Example `$HOME\.dbt\profiles.yml`:
 
-top-level product fields;
-cart structures;
-checkout structures;
-recommendation structures.
+```yaml
+glamira_analytics:
+  target: dev
 
-Product extraction code:
+  outputs:
+    dev:
+      type: bigquery
+      method: oauth
+      project: <YOUR_GCP_PROJECT_ID>
+      dataset: dbt_dev
+      location: asia-southeast1
+      threads: 4
+```
 
-src/glamira_data/product_extraction/
+Validate:
 
-Product dimension code:
+```powershell
+dbt debug
+dbt parse --no-partial-parse
+```
 
-src/product/
-├── build_dim_product_enriched.py
-└── profile_dim_product_semantics.py
+---
 
-Current product enrichment result:
+## 12. dbt Layers
 
-Metric	Value
-Product universe	19,558
-Enriched products	18,648
-Not enriched	910
-Enrichment coverage	95.35%
-Dimension rows	19,558
-Duplicate product IDs	0
-Product accounting coverage	100%
+### Staging — `dbt_dev_staging`
 
-The enrichment process was stopped after diminishing returns were
-observed.
+```text
+stg_checkout_success
+stg_products
+stg_geoip
+```
 
-Unresolved products are retained in the dimension with
-NOT_ENRICHED status instead of being silently removed.
+Responsibilities:
 
-## 8. Known Product Limitation
+- standardize names and types;
+- normalize environment labels;
+- preserve source fields required downstream;
+- prepare product and geography enrichment;
+- retain controlled source PII where transformation requires it.
 
-Product categories are collected from localized storefront metadata.
+### Core — `dbt_dev_core`
 
-Observed values include localized equivalents of categories such as:
+```text
+int_checkout_deduplicated
+int_sales_order_lines
+```
 
-Wedding Rings
-Anillos de boda
-结婚戒指
-Alyans
+Checkout business grain:
 
-Some extracted category values also correspond to product-name
-breadcrumb values.
+```text
+order_id + store_id + cart_hash
+```
 
-Therefore, the current category field should not yet be treated as a
-canonical cross-country taxonomy.
+Sales-line grain:
 
-Category normalization is intentionally deferred to a later analytical
-modeling step.
+```text
+checkout_instance_key + line_number
+```
 
-## 9. Repository Structure
-glamira-data-platform/
-│
-├── docs/
-│   ├── data_dictionary.md
-│   ├── data_quality_report.md
-│   ├── ip_geolocation_report.md
-│   ├── mongodb_vm_setup.md
-│   ├── product_crawl_feasibility.md
-│   ├── product_dimension_contract.md
-│   ├── product_dimension_enrichment.md
-│   ├── product_extraction_report.md
-│   ├── product_source_decision.md
-│   └── scope_confirmation.md
-│
-├── src/
-│   ├── glamira_data/
-│   │   ├── discovery/
-│   │   ├── enrichment/
-│   │   │   └── ip_geo/
-│   │   └── product_extraction/
-│   │
-│   └── product/
-│
-├── data/
-│   ├── raw/          # ignored
-│   ├── crawl/        # ignored
-│   └── processed/    # ignored
-│
-├── .gitignore
-├── pyproject.toml
-├── uv.lock
-└── README.md
+### Mart — `dbt_dev_mart`
 
-Generated datasets and large raw files are intentionally excluded from
-Git.
+Dimensions:
 
-## 10. Local Development Setup
-Requirements
-Python 3.12
-uv
-Git
-Visual Studio Code
-MongoDB when local MongoDB access is required
-Google Cloud CLI for GCP operations
-Clone repository
-git clone <YOUR_REPOSITORY_URL>
-cd glamira-data-platform
-Install dependencies
+```text
+dim_customer
+dim_product
+dim_store
+dim_device
+dim_date
+dim_geo
+```
 
-The project uses uv for Python environment and dependency management.
+Fact:
 
-uv sync --locked
+```text
+fact_sales_order_detail
+```
 
-Activate the environment if required.
+BI serving view:
 
-Windows PowerShell:
+```text
+bi_sales_order_detail
+```
 
-.venv\Scripts\Activate.ps1
+---
 
-Linux:
+## 13. Build the Project
 
-source .venv/bin/activate
-## 11. Environment Variables
+From the dbt project directory:
 
-Credentials and secrets must not be committed to Git.
+```powershell
+dbt run
+dbt test
+```
 
-Example configuration:
+Or:
 
-MONGODB_URI=mongodb://localhost:27017
-MONGODB_DATABASE=glamira
-MONGODB_COLLECTION=summary
+```powershell
+dbt build
+```
 
-Store local values in:
+Generate docs:
 
-.env
+```powershell
+dbt docs generate
+dbt docs serve --port 8080
+```
 
-The .env file is excluded through .gitignore.
+`target/` contains generated artifacts and should normally remain ignored by Git.
 
-## 12. Documentation
+---
 
-Important project documents:
+## 14. Validate the Final Fact
 
-Document	Purpose
-docs/scope_confirmation.md	Scope and GO/NO-GO decisions
-docs/data_quality_report.md	Source data-quality assessment
-docs/mongodb_vm_setup.md	MongoDB/GCP VM setup and validation
-docs/ip_geolocation_report.md	GeoIP enrichment findings
-docs/product_source_decision.md	Product metadata source decision
-docs/product_extraction_report.md	Product discovery findings
-docs/product_crawl_feasibility.md	Crawl feasibility and limitations
-docs/product_dimension_contract.md	Product dimension grain/schema contract
-docs/product_dimension_enrichment.md	Product enrichment results
-docs/data_dictionary.md	Dataset and field definitions
-## 13. Current Project Status
-Phase 0 — Data Investigation
-PASS
+```sql
+SELECT
+    COUNT(*) AS row_count,
+    COUNT(DISTINCT sales_order_detail_key) AS distinct_fact_keys,
+    COUNT(DISTINCT checkout_instance_key) AS successful_checkouts,
+    SUM(quantity) AS raw_units,
+    COUNT(DISTINCT product_id) AS distinct_products,
+    COUNTIF(customer_key = 0) AS unknown_customer_lines,
+    COUNTIF(product_key = 0) AS unknown_product_lines,
+    COUNTIF(geo_key = 0) AS unknown_geo_lines
+FROM `<YOUR_GCP_PROJECT_ID>.dbt_dev_mart.fact_sales_order_detail`;
+```
 
-Phase 1 — Infrastructure & Full Data Loading
-PASS
+Original expected result:
 
-Phase 2 — Data Enrichment
-PASS_WITH_ACCEPTED_LIMITATION
+```text
+row_count               34,916
+distinct_fact_keys      34,916
+successful_checkouts    25,962
+raw_units               45,573
+distinct_products        5,826
+unknown_customer_lines  11,681
+unknown_product_lines    6,805
+unknown_geo_lines           17
+```
 
-Accepted limitation:
+---
 
-910 / 19,558 products are not enriched.
+## 15. Data Quality Strategy
 
-The complete product universe is preserved.
+The project distinguishes:
 
-## 14. Engineering Principles
+```text
+Transformation failure
+!=
+Known source limitation
+```
 
-This project follows several core Data Engineering practices:
+### Hard contracts
 
-understand data before coding;
-validate row counts between pipeline stages;
-preserve raw source data;
-avoid silent data loss;
-document schema drift;
-distinguish expected NULLs from data-quality failures;
-use explicit grain for analytical datasets;
-document accepted limitations;
-keep generated/large datasets outside Git;
-commit work in small logical checkpoints.
+Must remain zero:
+
+- non-positive quantity;
+- inconsistent line amount;
+- unknown date;
+- unknown store;
+- unknown device.
+
+### Tolerated / monitored limitations
+
+| Metric | Baseline | Maximum accepted rate |
+|---|---:|---:|
+| Missing currency | 3.1075% | 5.00% |
+| Missing price information | ~0.0029% | 0.01% |
+| Unknown product | 19.4896% | 25.00% |
+| Unknown geography | 0.0487% | 0.10% |
+| Quantity greater than 10 | 0.0430% | 0.10% |
+
+Quality tests are under:
+
+```text
+tests/quality/
+```
+
+Known limitations are documented in:
+
+```text
+docs/data_quality.md
+```
+
+---
+
+## 16. Quantity Anomaly
+
+A known source row contains:
+
+```text
+quantity = 9,999
+```
+
+On `2020-04-09`, that one row raises daily units from about `504` to `10,503`.
+
+The row is retained because no authoritative business rule proves it is invalid.
+
+Therefore:
+
+- Raw Units remain source-faithful;
+- high quantities are explicitly flagged;
+- BI must not silently remove these rows;
+- adjusted metrics require a documented business rule.
+
+---
+
+## 17. Multi-Currency Policy
+
+The fact stores:
+
+```text
+line_amount_local
+currency_symbol
+```
+
+The dataset contains multiple currencies.
+
+This is invalid:
+
+```text
+SUM(line_amount_local) across all currencies
+```
+
+The project supports `Sales Amount Local` only within a consistent:
+
+```text
+Store + Currency
+```
+
+context.
+
+A global normalized revenue KPI requires:
+
+- ISO currency codes;
+- exchange-rate data;
+- conversion dates;
+- target reporting currency;
+- reproducible FX logic.
+
+---
+
+## 18. PII Protection
+
+Protected source attributes include:
+
+```text
+customer_id
+email_address
+ip_address
+device_id
+user_agent
+current_url
+referrer_url
+```
+
+Original taxonomy:
+
+```text
+Glamira Data Classification
+```
+
+Policy classes:
+
+```text
+Direct Identifier
+Customer Identifier
+Device Identifier
+Network Identifier
+Quasi Identifier
+Sensitive URL
+```
+
+Original policy-tag coverage:
+
+```text
+Staging:  8 tagged columns
+Core:    14 tagged columns
+Total:   22 tagged columns
+```
+
+When reproducing:
+
+1. create your own taxonomy in the same region as the BigQuery datasets;
+2. create equivalent policy tags;
+3. replace policy-tag resource IDs in dbt YAML;
+4. grant Fine-Grained Reader only to principals that need raw PII;
+5. rebuild dbt models so column metadata/tags are persisted.
+
+### Mart protection
+
+`dim_customer` uses:
+
+```text
+customer_id_hash
+```
+
+for pseudonymization.
+
+The BI view intentionally excludes even that pseudonym.
+
+The BI surface does not expose:
+
+```text
+customer_id
+customer_id_hash
+email_address
+ip_address
+device_id
+user_agent
+current_url
+referrer_url
+```
+
+---
+
+## 19. BI Serving Layer
+
+Looker Studio should use:
+
+```text
+dbt_dev_mart.bi_sales_order_detail
+```
+
+instead of blending the fact and six dimensions inside Looker Studio.
+
+Benefits:
+
+- semantic joins stay version-controlled in dbt;
+- easier testing;
+- no inconsistent dashboard blends;
+- lower fan-out risk;
+- centralized security;
+- simpler dashboard development.
+
+Validate:
+
+```sql
+SELECT
+    COUNT(*) AS row_count,
+    COUNT(DISTINCT sales_order_detail_key) AS distinct_keys,
+    COUNT(DISTINCT checkout_instance_key) AS successful_checkouts,
+    SUM(quantity) AS raw_units,
+    COUNT(DISTINCT product_id) AS distinct_products,
+    COUNTIF(is_unknown_customer) AS unknown_customer_lines,
+    COUNTIF(is_unknown_product) AS unknown_product_lines,
+    COUNTIF(is_unknown_geo) AS unknown_geo_lines,
+    COUNTIF(is_high_quantity) AS high_quantity_lines,
+    COUNTIF(is_missing_currency) AS missing_currency_lines
+FROM `<YOUR_GCP_PROJECT_ID>.dbt_dev_mart.bi_sales_order_detail`;
+```
+
+Original expected result:
+
+```text
+row_count               34,916
+distinct_keys           34,916
+successful_checkouts    25,962
+raw_units               45,573
+distinct_products        5,826
+unknown_customer_lines  11,681
+unknown_product_lines    6,805
+unknown_geo_lines           17
+high_quantity_lines         15
+missing_currency_lines   1,085
+```
+
+---
+
+## 20. Looker Studio Dashboard
+
+Connect Looker Studio to:
+
+```text
+Project: <YOUR_GCP_PROJECT_ID>
+Dataset: dbt_dev_mart
+Object:  bi_sales_order_detail
+```
+
+The final dashboard has four pages.
+
+### Page 1 — Executive / Sales Overview
+
+KPIs:
+
+```text
+Product Lines
+Successful Checkouts
+Raw Units
+Distinct Products
+High Quantity Lines
+Missing Currency Lines
+```
+
+Visuals:
+
+```text
+Top Stores by Successful Checkouts
+Successful Checkouts Over Time
+Sales Amount by Store & Currency
+```
+
+### Page 2 — Product Performance
+
+KPIs:
+
+```text
+Distinct Products
+High Quantity Lines
+Unknown Product Lines
+Product Coverage
+```
+
+Visuals:
+
+```text
+Top Products by Successful Checkouts
+Product Master Coverage
+Product Detail
+```
+
+Use:
+
+```text
+product_id = product identity
+product_name/category_name = enrichment only
+```
+
+### Page 3 — Customer Analytics
+
+Baseline:
+
+```text
+Registered Customers        15,087
+Registered Checkouts        16,799
+Unknown Customer Checkouts   9,163
+Unknown Customer Lines      11,681
+```
+
+Customer reporting is aggregate-only.
+
+### Page 4 — Geography & Device Analysis
+
+Geography baseline:
+
+```text
+Countries                    98
+Successful Checkouts      25,962
+Product Lines             34,916
+Unknown Geography Lines       17
+```
+
+Device baseline:
+
+```text
+Mobile Checkouts      13,765
+Desktop Checkouts     11,785
+Tablet Checkouts         411
+Bot Checkouts               1
+```
+
+---
+
+## 21. BI Metric Contracts
+
+| Field | Correct aggregation |
+|---|---|
+| `checkout_instance_key` | `COUNT DISTINCT` |
+| `product_id` | `COUNT DISTINCT` for distinct-product KPIs |
+| `quantity` | `SUM` |
+| `line_amount_local` | `SUM` only in consistent currency context |
+| `sales_order_detail_key` | identifier; never `SUM` |
+| surrogate keys | identifiers; never `SUM` |
+
+Date controls must use:
+
+```text
+checkout_date
+```
+
+not:
+
+```text
+date_key
+```
+
+---
+
+## 22. Product Coverage
+
+```text
+Distinct source products    5,826
+Matched product IDs         5,628
+Unknown product IDs           198
+
+Matched product lines      28,111
+Unknown product lines       6,805
+
+Product coverage           ~80.51%
+Unknown line rate           19.4896%
+```
+
+Unknown products are mapped to an explicit Unknown member instead of being dropped.
+
+---
+
+## 23. Customer Modeling
+
+Original customer dimension:
+
+```text
+15,100 rows total
+15,099 registered customer hashes
+1 Unknown Customer
+```
+
+Anonymous/unresolved customers are accepted business states, not automatically transformation failures.
+
+---
+
+## 24. Geography Modeling
+
+Dimension grain:
+
+```text
+country + region + city
+```
+
+Original dimension:
+
+```text
+5,944 rows total
+5,943 known
+1 Unknown Geography
+```
+
+Production GeoIP outcomes included:
+
+```text
+FOUND                 25,951
+NON_GLOBAL                10
+ADDRESS_NOT_FOUND          1
+```
+
+---
+
+## 25. Device Modeling
+
+Grain:
+
+```text
+device_type + resolution
+```
+
+Device types:
+
+```text
+MOBILE
+DESKTOP
+TABLET
+BOT
+```
+
+`is_bot` is an attribute rather than part of the surrogate-key identity.
+
+---
+
+## 26. Date Modeling
+
+Production date range:
+
+```text
+2020-04-01 through 2020-06-04
+```
+
+Active dates:
+
+```text
+65
+```
+
+`date_key` uses `YYYYMMDD`, with `0` reserved for Unknown Date.
+
+---
+
+## 27. Store Modeling
+
+`store_id` is the authoritative natural key.
+
+`store_domain` is descriptive only and is not guaranteed unique.
+
+Dashboard controls therefore use:
+
+```text
+<store_id> | <store_domain>
+```
+
+---
+
+## 28. Tests
+
+The project contains:
+
+- uniqueness tests;
+- not-null tests;
+- accepted-value tests;
+- fact-to-dimension relationship tests;
+- business-grain singular tests;
+- PII exposure tests;
+- customer-hash protection tests;
+- hard data-quality tests;
+- tolerated quality-threshold tests.
+
+Explicit business grains tested:
+
+```text
+int_checkout_deduplicated
+= order_id + store_id + cart_hash
+
+int_sales_order_lines
+= checkout_instance_key + line_number
+
+fact_sales_order_detail
+= checkout_instance_key + line_number
+```
+
+Run:
+
+```powershell
+dbt test
+```
+
+Acceptance is based on all current tests passing, not on a fixed historical test count.
+
+---
+
+## 29. Documentation
+
+dbt/BI docs:
+
+```text
+dbt/glamira_analytics/docs/data_quality.md
+dbt/glamira_analytics/docs/dbt_quality_report.md
+dbt/glamira_analytics/docs/bi_dashboard_spec.md
+dbt/glamira_analytics/docs/bi_dashboard_handoff.md
+```
+
+Platform-level docs remain under:
+
+```text
+docs/
+```
+
+---
+
+## 30. BigQuery REST Helper
+
+During development, the local `bq` CLI had a Windows networking issue.
+
+Helper:
+
+```text
+dbt/glamira_analytics/scripts/Invoke-BqRest.ps1
+```
+
+Load it:
+
+```powershell
+. .\scripts\Invoke-BqRest.ps1
+```
+
+Example:
+
+```powershell
+$sql = @'
+SELECT COUNT(*) AS row_count
+FROM `<YOUR_GCP_PROJECT_ID>.dbt_dev_mart.fact_sales_order_detail`
+'@
+
+Invoke-BqRest -Query $sql | Format-List
+```
+
+This helper is optional if `bq` works normally on your machine.
+
+---
+
+## 31. Troubleshooting
+
+### No `dbt_project.yml` found
+
+Run dbt from:
+
+```powershell
+cd D:\glamira-data-platform\dbt\glamira_analytics
+```
+
+Or pass:
+
+```powershell
+dbt parse --project-dir .\dbt\glamira_analytics --no-partial-parse
+```
+
+### Policy-tag access denied
+
+Grant the intended user/service account Fine-Grained Reader access on the relevant policy tags. Do not remove policy tags merely to make dbt run.
+
+### Looker Studio integer overflow
+
+Never use:
+
+```text
+SUM(checkout_instance_key)
+```
+
+Use:
+
+```text
+COUNT DISTINCT(checkout_instance_key)
+```
+
+### Google Maps does not accept `country_name`
+
+Set the Looker Studio data-source field type to:
+
+```text
+Geo -> Country
+```
+
+### KPIs are unexpectedly small
+
+Check:
+
+- Store filter;
+- Currency filter;
+- Date filter;
+- chart selection;
+- cross-filtering.
+
+Reset controls before comparing with project baselines.
+
+---
+
+## 32. Reproduction Checklist
+
+```text
+[ ] Raw/source data available
+[ ] BigQuery raw tables loaded
+[ ] dbt connection succeeds
+[ ] staging builds
+[ ] core builds
+[ ] dimensional mart builds
+[ ] BI serving view builds
+[ ] all dbt tests pass
+[ ] fact rows = 34,916 for the original dataset
+[ ] distinct fact keys = fact rows
+[ ] successful checkouts = 25,962
+[ ] raw units = 45,573
+[ ] distinct products = 5,826
+[ ] policy tags protect sensitive staging/core columns
+[ ] BI view contains no prohibited PII
+[ ] Looker Studio reads only bi_sales_order_detail
+[ ] four dashboard pages exist
+[ ] dashboard KPIs reconcile to BigQuery
+[ ] currencies are not globally summed
+[ ] known data-quality limitations remain visible
+```
+
+---
+
+## 33. Recommended Execution Order
+
+```text
+1. Read discovery / ingestion documentation
+2. Obtain or prepare source datasets
+3. Configure GCP and authentication
+4. Load raw data into BigQuery
+5. Configure dbt profiles.yml
+6. Build staging
+7. Build core
+8. Build marts
+9. Run dbt tests
+10. Configure policy tags and permissions
+11. Build BI-serving view
+12. Reconcile BI view against fact
+13. Connect Looker Studio
+14. Build the four dashboard pages
+15. Reconcile dashboard KPIs
+16. Generate dbt docs
+```
+
+Transformation workflow:
+
+```powershell
+cd D:\glamira-data-platform\dbt\glamira_analytics
+
+dbt parse --no-partial-parse
+dbt run
+dbt test
+dbt docs generate
+```
+
+---
+
+## 34. Engineering Decisions
+
+Key decisions:
+
+- preserve raw anomalies instead of silently deleting them;
+- use explicit Unknown members instead of orphan foreign keys;
+- test technical keys and business grains separately;
+- treat anonymous customers as a valid state;
+- retain unmatched product IDs for traceability;
+- retain PII in controlled engineering layers only when necessary;
+- pseudonymize registered customer IDs in the mart;
+- expose an even safer BI-serving view;
+- keep semantic joins in dbt instead of Looker Studio blends;
+- prohibit global revenue aggregation across currencies;
+- expose data-quality limitations to dashboard users.
+
+---
+
+## 35. Future Improvements
+
+Potential next steps:
+
+- ISO currency codes;
+- historical FX rates and normalized reporting currency;
+- business investigation of the `quantity = 9999` anomaly;
+- improved product-master coverage for the 198 unresolved IDs;
+- CI for dbt parse/test on pull requests;
+- scheduled/orchestrated dbt runs;
+- stricter dev/prod dataset separation;
+- dedicated production service accounts;
+- freshness tests and source SLAs;
+- dashboard deployment/access documentation.
+
+---
+
+## 36. Project Status
+
+```text
+Raw data exploration             COMPLETE
+BigQuery analytical source       COMPLETE
+dbt staging                      COMPLETE
+dbt core                         COMPLETE
+Dimensional mart                 COMPLETE
+PII protection                   COMPLETE
+Data quality hardening           COMPLETE
+dbt documentation                COMPLETE
+BI serving layer                 COMPLETE
+Looker Studio dashboard          COMPLETE
+Dashboard reconciliation         COMPLETE
+```
+
+This project demonstrates not only transformation code, but also:
+
+- data discovery;
+- dimensional design;
+- data contracts;
+- test design;
+- PII governance;
+- analytical semantics;
+- multi-currency reasoning;
+- BI reconciliation;
+- engineering documentation.
+
+---
+
+## Data Notice
+
+This repository is an educational and portfolio Data Engineering project.
+
+Raw source data should not be committed to Git. Any use or redistribution of source datasets must respect the source owner's terms, privacy requirements, and applicable law.
