@@ -1,6 +1,3 @@
-{{ config(
-    materialized='table'
-) }}
 
 WITH date_bounds AS (
 

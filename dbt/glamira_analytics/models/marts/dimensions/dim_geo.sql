@@ -1,7 +1,3 @@
-{{ config(
-    materialized='table'
-) }}
-
 WITH production_geographies AS (
 
     SELECT DISTINCT

@@ -1,7 +1,3 @@
-{{ config(
-    materialized='table'
-) }}
-
 WITH device_signatures AS (
 
     SELECT DISTINCT

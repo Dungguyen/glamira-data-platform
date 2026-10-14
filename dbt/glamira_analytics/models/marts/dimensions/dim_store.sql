@@ -1,6 +1,3 @@
-{{ config(
-    materialized='table'
-) }}
 
 WITH production_store_hosts AS (
 

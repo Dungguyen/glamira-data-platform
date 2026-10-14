@@ -1,6 +1,3 @@
-{{ config(
-    materialized='table'
-) }}
 
 WITH known_customers AS (
 

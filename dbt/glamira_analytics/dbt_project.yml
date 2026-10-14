@@ -41,9 +41,9 @@ models:
       +schema: staging
 
     core:
-      +materialized: table
+      +materialized: view
       +schema: core
 
     marts:
-      +materialized: table
+      +materialized: view
       +schema: mart
