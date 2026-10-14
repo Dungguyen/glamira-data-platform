@@ -1,8 +1,3 @@
-{{ config(
-    materialized='table',
-    cluster_by=['order_id', 'product_id']
-) }}
-
 WITH unnested AS (
 
     SELECT

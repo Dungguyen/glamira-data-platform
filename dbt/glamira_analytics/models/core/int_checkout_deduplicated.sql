@@ -1,8 +1,3 @@
-{{ config(
-    materialized='table',
-    cluster_by=['order_id', 'store_id']
-) }}
-
 WITH source AS (
 
     SELECT

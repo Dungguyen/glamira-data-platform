@@ -1,8 +1,3 @@
-{{ config(
-    materialized='table',
-    cluster_by=['ip_address']
-) }}
-
 WITH source AS (
 
     SELECT
